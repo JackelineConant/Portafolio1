@@ -50,21 +50,20 @@ def predict(X, w, b):
 #---------------------------------------------------------------------------------------------------
 
 #Cargar la base de datos
-cdata = pd.read_csv('insurance.csv')
+cdata = pd.read_csv('Real estate.csv')
 #Visualizar tabla
 print(cdata.head().T)
 #Visualizar su información
 print(cdata.info())
 
-#Convertir valores no númericos en valores booleanos
-df = pd.get_dummies(cdata,columns=['sex','smoker','region'], drop_first=True)
-# muestra las primeras 5 líneas del dataframe resultante
-print(df.head())
+#Eliminar los valores que no son de importancia para la regresión lineal
+cdata.drop(columns=['No','X1 transaction date'], inplace=True)
+print(cdata.head())
 
 #Hace la función shuffle para desordenar los datos del dataset
-shuffle_df = df.sample(frac=1).reset_index(drop=True)
-X_original = shuffle_df.drop(columns=['charges'])
-y = shuffle_df['charges']
+shuffle_df = cdata.sample(frac=1).reset_index(drop=True)
+X_original = shuffle_df.drop(columns=['Y house price of unit area'])
+y = shuffle_df['Y house price of unit area']
 #Visualizar las columnas de X
 print(X_original)
 print(y)
@@ -92,8 +91,8 @@ X_test = X[train_size:]
 Y_test = y[train_size:]
 
 #Seleccionar el valor a utilizar en X para la regresión lineal
-X_train = X_train['age']
-X_test = X_test['age']
+X_train = X_train['X2 house age']
+X_test = X_test['X2 house age']
 
 # Inicializar el peso y bias
 w = 0.0
