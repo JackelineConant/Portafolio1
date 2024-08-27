@@ -7,8 +7,6 @@ import pandas as pd
 # Function to update weights (w) and bias (b) during one epoch
 def update_w_and_b(X, y, w, b, alpha):
     '''Update parameters w and b during 1 epoch'''
-    dl_dw = 0.0
-    dl_db = 0.0
     N = len(y)
     y_pred = np.dot(X, w) + b
     error = y - y_pred
@@ -90,10 +88,33 @@ Y_train = y[:train_size]
 X_test = X[train_size:]
 Y_test = y[train_size:]
 
-#Seleccionar el valor a utilizar en X para la regresión lineal
+# Inicializar el peso y bias
+w = np.zeros(X_train.shape[1])
+b = 0.0
+
+# Hyperparameters
+alpha = 0.001  # Learning rate
+epochs = 12000  # Number of epochs
+
+# Train the model
+w, b = train(X_train, Y_train, w, b, alpha, epochs)
+
+# Evaluate the model on the test set
+Y_pred = predict(X_test, w, b)
+
+# Calculate and print the final loss on the test set
+test_loss = avg_loss(X_test, Y_test, w, b)
+print(f"Final Test Loss: {test_loss:.4f}")
+
+#---------------------------------------------------------------------------------------------------
+
+#Seleccionar el valor a utilizar en X para la regresión lineal 
 X_train = X_train['X2 house age']
 X_test = X_test['X2 house age']
+#muestra los datos del feature de entrenamiento
+print(X_train)
 
+#Volver a iniciar los datos para los nuevos valores de X -------------------------------------------
 # Inicializar el peso y bias
 w = 0.0
 b = 0.0
@@ -125,14 +146,14 @@ def train_and_plot(X, y, w, b, alpha, epochs):
   # plot visuals for last epoch
     if e == epochs-1:
       avg_loss_ = avg_loss(X, y, w, b)
-      x_list = np.array(range(0,50)) # Set x range
-      y_list = (x_list * w) + b # Set function for the model based on w & b
-      plt.scatter(x=X, y=y)
-      plt.plot(y_list, c='r')
+      plt.scatter(X[:], y, color='blue')  # Plotting first feature vs. target
+      plt.plot(X[:], np.dot(X, w) + b, color='red')
       plt.title("Epoch {} | Loss: {} | w:{}, b:{}".format(e, round(avg_loss_,2), round(w, 4), round(b, 4)))
       plt.show()
   return w, b
 
-epoch_plots = [1, 2, 3, 11, 51, 101, epochs+1]
+epoch_plots = [1, int(epochs/50), 2*int(epochs/50), 3*int(epochs/50), 4*int(epochs/50), epochs+1]
 for epoch_plt in epoch_plots:
     w, b = train_and_plot(X_train, Y_train, 0.0, 0.0, alpha, epoch_plt)
+
+#---------------------------------------------------------------------------------------------------
