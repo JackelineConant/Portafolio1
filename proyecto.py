@@ -1,76 +1,139 @@
-#Importar librerías
-import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
-import math
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import pandas as pd
 
-#Importar algoritmo de regresión 
-from regression import *
+#Algoritmo para la regresión lineal
+#---------------------------------------------------------------------------------------------------
+# Function to update weights (w) and bias (b) during one epoch
+def update_w_and_b(X, y, w, b, alpha):
+    '''Update parameters w and b during 1 epoch'''
+    dl_dw = 0.0
+    dl_db = 0.0
+    N = len(y)
+    y_pred = np.dot(X, w) + b
+    error = y - y_pred
 
-#Inicializar la base de datos a utilizar
-cdata = pd.read_csv('cancer_data.csv')
+    # Gradients for weight and bias
+    dl_dw = -2 * np.dot(X.T, error) / N
+    dl_db = -2 * np.sum(error) / N
 
-#Damos un vistazo a como se ve la base de datos
-print(cdata.head())
+    # Update weights and bias
+    w -= alpha * dl_dw
+    b -= alpha * dl_db
 
-#Posteriormente limpiamos los datos 
-#Borrar datos que no sean importante para las predicciones
-cdata.drop(["id", "Unnamed: 32",],axis=1,inplace = True)
-#Remplazar los datos de diagnosis, que utilizaremos para hacer nuestra regresión logística
-cdata['diagnosis'].replace(['B', 'M'],[0, 1], inplace=True)
+    return w, b
 
-#Función de normalización 
+# Function to calculate the Mean Squared Error (MSE)
+def avg_loss(X, y, w, b):
+    '''Calculates the MSE'''
+    N = len(y)
+    y_pred = np.dot(X, w) + b
+    total_error = np.sum((y - y_pred) ** 2)
+    return total_error / N
 
-#Dividir mis variables y(labels) y x(features)
-y = cdata['diagnosis'].values
-#--------------------------------
-X = cdata.drop(['diagnosis'], axis=1)
+# Training function
+def train(X, y, w, b, alpha, epochs):
+    '''Loops over multiple epochs and prints progress'''
+    print('Training progress:')
+    for e in range(epochs):
+        w, b = update_w_and_b(X, y, w, b, alpha)
+        if e % 400 == 0 or e == epochs - 1:
+            avg_loss_ = avg_loss(X, y, w, b)
+            print(f"Epoch {e} | Loss: {avg_loss_:.4f} | Weights: {w} | Bias: {b:.4f}")
+    return w, b
 
-#Analizar cada uno de los valores
-'''
-print(X)
+# Prediction function
+def predict(X, w, b):
+    '''Make predictions based on the trained model'''
+    return np.dot(X, w) + b
+
+#---------------------------------------------------------------------------------------------------
+
+#Cargar la base de datos
+cdata = pd.read_csv('insurance.csv')
+#Visualizar tabla
+print(cdata.head().T)
+#Visualizar su información
+print(cdata.info())
+
+#Convertir valores no númericos en valores booleanos
+df = pd.get_dummies(cdata,columns=['sex','smoker','region'], drop_first=True)
+# muestra las primeras 5 líneas del dataframe resultante
+print(df.head())
+
+#Hace la función shuffle para desordenar los datos del dataset
+shuffle_df = df.sample(frac=1).reset_index(drop=True)
+X_original = shuffle_df.drop(columns=['charges'])
+y = shuffle_df['charges']
+#Visualizar las columnas de X
+print(X_original)
 print(y)
-'''
 
-#Dividir los datos en train y test
+# Normaliza los datos utilizando el escalador de datos
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
+dataScaler = StandardScaler()
+scaler = dataScaler.fit(X_original)
+X_scaled = scaler.transform(X_original)
+# muestra el arreglo resultante
+print(X_scaled)
 
-#Primeramente llamaremos una función shuffle para sortear los datos del training y test set
-cdata = cdata.sample(frac=1)
-#print(cdata)
+# crea un dataframe con los datos normalizados
+X = pd.DataFrame(X_scaled)
+X.columns = X_original.columns
+# muestra las primeras 5 líneas del dataframe resultante
+print(X.head())
 
-#Posteriormente necesitaremos divir el dataset en un porcentaje,
-#   por lo que haré uso de una variable ratio
-ratio = 0.80
-#En base a previos conocimientos, se me comentó que normalmente train set contiene el 80% de dataset
-#   y test set contiene el 20% del dataset para mejor entrenamiento y predicciones
-total_rows = cdata.shape[0]
-train_size = int(total_rows*ratio) #basicamente se creo una función que tiene el 80% de las filas del dataset
+#Hacer el split de los datos de entrenamiento(train set) y evaluación(test set)
+train_size = int(0.8 * len(cdata))
 
-#Finalmente se dividen los datos
-train = cdata[0:train_size]
-test = cdata[train_size:]
+X_train = X[:train_size]
+Y_train = y[:train_size]
+X_test = X[train_size:]
+Y_test = y[train_size:]
 
-#Volvemos a dividirlos
-#Train & Test X values
-X_train = train.drop(['diagnosis'], axis=1)
-#--------------------------------
-X_test = test.drop(['diagnosis'], axis=1)
-#Train & Test Y values
-y_train = train['diagnosis'].values
-#--------------------------------
-y_test = test['diagnosis'].values
+#Seleccionar el valor a utilizar en X para la regresión lineal
+X_train = X_train['age']
+X_test = X_test['age']
 
-print(X_train)
-print(X_test)
+# Inicializar el peso y bias
+w = 0.0
+b = 0.0
+# Hyperparametros
+alpha = 0.001  # Learning rate(alpha)
+epochs = 12000  # Número de epochs(iteraciones)
 
-#Escalamos los datos con la función sklearn
-'''sc = StandardScaler()
-  X_train = sc.fit_transform(X_train)
-  X_test = sc.transform(X_test)
-  # Train model
-  epochs = 1000
-  alpha = 1
-  best_params = log_regression4(X_train, y_train, alpha, epochs)'''
+# Entrenar al modelo
+w, b = train(X_train, Y_train, w, b, alpha, epochs)
+# Evaluar el modelo con el Test set
+Y_pred = predict(X_test, w, b)
+
+# Calculate and print the final loss on the test set
+test_loss = avg_loss(X_test, Y_test, w, b)
+print(f"Final Test Loss: {test_loss:.4f}")
+
+# Visualize results for one feature (if you want to plot)
+plt.scatter(X_test[:], Y_test, color='blue')  # Plotting first feature vs. target
+plt.plot(X_test[:], predict(X_test, w, b), color='red')
+plt.xlabel('First Feature')
+plt.ylabel('Target')
+plt.title('Linear Regression on Test Set')
+plt.show()
+
+def train_and_plot(X, y, w, b, alpha, epochs):
+  '''Loops over multiple epochs and plot graphs showing progress'''
+  for e in range(epochs):
+    w, b = update_w_and_b(X, y, w, b, alpha)
+  # plot visuals for last epoch
+    if e == epochs-1:
+      avg_loss_ = avg_loss(X, y, w, b)
+      x_list = np.array(range(0,50)) # Set x range
+      y_list = (x_list * w) + b # Set function for the model based on w & b
+      plt.scatter(x=X, y=y)
+      plt.plot(y_list, c='r')
+      plt.title("Epoch {} | Loss: {} | w:{}, b:{}".format(e, round(avg_loss_,2), round(w, 4), round(b, 4)))
+      plt.show()
+  return w, b
+
+epoch_plots = [1, 2, 3, 11, 51, 101, epochs+1]
+for epoch_plt in epoch_plots:
+    w, b = train_and_plot(X_train, Y_train, 0.0, 0.0, alpha, epoch_plt)
