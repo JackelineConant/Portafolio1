@@ -3,36 +3,35 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 #Algoritmo para la regresión lineal
-#---------------------------------------------------------------------------------------------------
-# Function to update weights (w) and bias (b) during one epoch
+#--------------------------------------------------------------------------------------------------------
+#Función que va a ir aumentando el peso (w) y el bias durante una iteracion (epoch)
 def update_w_and_b(X, y, w, b, alpha):
-    '''Update parameters w and b during 1 epoch'''
+    #Actualizan los parámetros w y b durante una iteración 
     N = len(y)
     y_pred = np.dot(X, w) + b
     error = y - y_pred
 
-    # Gradients for weight and bias
+    # Gradiantes de peso y bias ------------------------------------------------------------------------- 
     dl_dw = -2 * np.dot(X.T, error) / N
     dl_db = -2 * np.sum(error) / N
 
-    # Update weights and bias
+    # Actualiza w y b y lo retornan ---------------------------------------------------------------------
     w -= alpha * dl_dw
     b -= alpha * dl_db
-
     return w, b
 
-# Function to calculate the Mean Squared Error (MSE)
+# Función para poder calcular la función de Error Cuadrático Medio(MSE) ---------------------------------
 def avg_loss(X, y, w, b):
-    '''Calculates the MSE'''
+    #Calculan el error y lo retornan
     N = len(y)
     y_pred = np.dot(X, w) + b
     total_error = np.sum((y - y_pred) ** 2)
     return total_error / N
 
-# Training function
+# Función para el entrenamiendo del modelo de regresión logística ---------------------------------------
 def train(X, y, w, b, alpha, epochs):
-    '''Loops over multiple epochs and prints progress'''
-    print('Training progress:')
+    #Hacen un bucle que se loopea sobre multiples iteraciones y al final imprime el progreso
+    print('Progreso de entrenamiento:')
     for e in range(epochs):
         w, b = update_w_and_b(X, y, w, b, alpha)
         if e % 400 == 0 or e == epochs - 1:
@@ -40,33 +39,43 @@ def train(X, y, w, b, alpha, epochs):
             print(f"Epoch {e} | Loss: {avg_loss_:.4f} | Weights: {w} | Bias: {b:.4f}")
     return w, b
 
-# Prediction function
+# Función para predecir valores -------------------------------------------------------------------------
 def predict(X, w, b):
-    '''Make predictions based on the trained model'''
+    #Hace predicciones en base a los datos de entrenamiento
     return np.dot(X, w) + b
 
-#---------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------
 
-#Cargar la base de datos
+#Cargar la base de datos a utilizar----------------------------------------------------------------------
+#En este caso yo utilicé la base de datos de Real Estate Price(Precio Inmoviliario)
+#https://www.kaggle.com/datasets/quantbruce/real-estate-price-prediction
 cdata = pd.read_csv('Real estate.csv')
-#Visualizar tabla
+#Visualizar tabla (Transpose data)
+print('Datos Real estate Price T\n')
 print(cdata.head().T)
 #Visualizar su información
+print('Información sobre el dataset\n')
 print(cdata.info())
 
 #Eliminar los valores que no son de importancia para la regresión lineal
 cdata.drop(columns=['No','X1 transaction date'], inplace=True)
+print('Base de datos sin las variables No y X1 transaction date\n')
 print(cdata.head())
 
 #Hace la función shuffle para desordenar los datos del dataset
 shuffle_df = cdata.sample(frac=1).reset_index(drop=True)
 X_original = shuffle_df.drop(columns=['Y house price of unit area'])
 y = shuffle_df['Y house price of unit area']
-#Visualizar las columnas de X
+#Visualizar las columnas de X y Y. 
+#Donde X son todos los datos sobrantes excepto 'Y house price of unit area', ya que esa será nuestra label(y)
+print('Valores de features x están mezcladas:\n')
 print(X_original)
+print('Valores del label y está mezclada:\n')
 print(y)
 
-# Normaliza los datos utilizando el escalador de datos
+#Normaliza los datos utilizando el escalador de datos--------------------------------------------------------
+#El propósito de normalizar los datos es tratar de hacerlos más cercanos y evitar puntos de datos muy 
+#   altos que puedan afectar las futuras predicciones del modelo entrenado.
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 dataScaler = StandardScaler()
 scaler = dataScaler.fit(X_original)
