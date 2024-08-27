@@ -112,7 +112,7 @@ w, b = train(X_train, Y_train, w, b, alpha, epochs)
 # Evaluar el modelo con el Test set
 Y_pred = predict(X_test, w, b)
 
-# Calcula y imprime el costo final en el Test Set
+# Calcula y imprime el error final en el Test Set
 test_loss = avg_loss(X_test, Y_test, w, b)
 print(f"Final Test Loss: {test_loss:.4f}")
 
@@ -138,7 +138,7 @@ w, b = train(X_train, Y_train, w, b, alpha, epochs)
 # Evaluar el modelo con el Test set
 Y_pred = predict(X_test, w, b)
 
-# Calcula y imprime el costo final en el Test Set
+# Calcula y imprime el error final en el Test Set
 test_loss = avg_loss(X_test, Y_test, w, b)
 print(f"Final Test Loss: {test_loss:.4f}")
 
@@ -160,8 +160,6 @@ def train_and_plot(X, y, w, b, alpha, epochs):
             avg_loss_ = avg_loss(X, y, w, b)
             plt.scatter(X[:], y, color='blue')  # Plotting first feature vs. target
             plt.plot(X[:], np.dot(X, w) + b, color='red')
-            plt.xlabel('X2 house age')
-            plt.ylabel('Y house price of unit area')
             plt.title("Epoch {} | Loss: {} | w:{}, b:{}".format(e, round(avg_loss_,2), round(w, 4), round(b, 4)))
             plt.show()
     return w, b
@@ -175,7 +173,19 @@ for epoch_plt in epoch_plots:
 #---------------------------------------------------------------------------------------------------------
 #Comentarios:
 '''
+El modelo de regresión lineal creado puede entrenarse con todos los predictores. Sin embargo, para la 
+visualización gráfica, se decidió utilizar solo una característica (feature) para mantener la gráfica más 
+limpia y evitar confusiones.
 
+Como reflexión, podemos ver que la regresión lineal es una técnica fundamental para analizar datos, 
+especialmente en el campo del machine learning. Su objetivo es modelar la relación entre una variable 
+dependiente (label) y una o más variables independientes (features). En las últimas funciones de este 
+código, exploramos una de sus formas más simples, donde buscamos que el modelo de regresión lineal 
+encontrara la línea recta que mejor se ajustara a nuestros datos.
+
+Una de las cosas que más me interesaron de este proyecto fue observar cómo, al agregar más características 
+al modelo, el error final o costo se reducía significativamente, mucho más que cuando se utilizaba solo un 
+predictor como variable x.
 '''
 
 #---------------------------------------------------------------------------------------------------------
