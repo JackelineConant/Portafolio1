@@ -1,10 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 
-#Algoritmo para la regresión lineal
+# Algoritmo para la regresión lineal
 #--------------------------------------------------------------------------------------------------------
-#Función que va a ir aumentando el peso (w) y el bias durante una iteracion (epoch)
+# Función que va a ir aumentando el peso (w) y el bias durante una iteracion (epoch)
 def update_w_and_b(X, y, w, b, alpha):
     #Actualizan los parámetros w y b durante una iteración 
     N = len(y)
@@ -46,50 +47,50 @@ def predict(X, w, b):
 
 #--------------------------------------------------------------------------------------------------------
 
-#Cargar la base de datos a utilizar----------------------------------------------------------------------
-#En este caso yo utilicé la base de datos de Real Estate Price(Precio Inmoviliario)
-#https://www.kaggle.com/datasets/quantbruce/real-estate-price-prediction
+# Cargar la base de datos a utilizar----------------------------------------------------------------------
+# En este caso yo utilicé la base de datos de Real Estate Price(Precio Inmoviliario)
+# https://www.kaggle.com/datasets/quantbruce/real-estate-price-prediction
 cdata = pd.read_csv('Real estate.csv')
-#Visualizar tabla (Transpose data)
+# Visualizar tabla (Transpose data)
 print('Datos Real estate Price T\n')
 print(cdata.head().T)
-#Visualizar su información
+# Visualizar su información
 print('Información sobre el dataset\n')
 print(cdata.info())
 
-#Eliminar los valores que no son de importancia para la regresión lineal
+# Eliminar los valores que no son de importancia para la regresión lineal
 cdata.drop(columns=['No','X1 transaction date'], inplace=True)
 print('Base de datos sin las variables No y X1 transaction date\n')
 print(cdata.head())
 
-#Hace la función shuffle para desordenar los datos del dataset
+# Hace la función shuffle para desordenar los datos del dataset
 shuffle_df = cdata.sample(frac=1).reset_index(drop=True)
 X_original = shuffle_df.drop(columns=['Y house price of unit area'])
 y = shuffle_df['Y house price of unit area']
-#Visualizar las columnas de X y Y. 
-#Donde X son todos los datos sobrantes excepto 'Y house price of unit area', ya que esa será nuestra label(y)
+# Visualizar las columnas de X y Y. 
+# Donde X son todos los datos sobrantes excepto 'Y house price of unit area', ya que esa será nuestra label(y)
 print('Valores de features x están mezcladas:\n')
 print(X_original)
 print('Valores del label y está mezclada:\n')
 print(y)
 
-#Normaliza los datos utilizando el escalador de datos--------------------------------------------------------
-#El propósito de normalizar los datos es tratar de hacerlos más cercanos y evitar puntos de datos muy 
+# Normaliza los datos utilizando el escalador de datos--------------------------------------------------------
+# El propósito de normalizar los datos es tratar de hacerlos más cercanos y evitar puntos de datos muy 
 #   altos que puedan afectar las futuras predicciones del modelo entrenado.
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 dataScaler = StandardScaler()
 scaler = dataScaler.fit(X_original)
 X_scaled = scaler.transform(X_original)
-# muestra el arreglo resultante
+# Muestra el arreglo normalizado resultante
+print("Valores de features standarizados:\n")
 print(X_scaled)
 
-# crea un dataframe con los datos normalizados
+# Crea un dataframe con los datos normalizados
 X = pd.DataFrame(X_scaled)
 X.columns = X_original.columns
-# muestra las primeras 5 líneas del dataframe resultante
+# Muestra las primeras 5 líneas del dataframe resultante
 print(X.head())
 
-#Hacer el split de los datos de entrenamiento(train set) y evaluación(test set)
+# Hacer el split de los datos de entrenamiento(train set)80% y evaluación(test set)20%
 train_size = int(0.8 * len(cdata))
 
 X_train = X[:train_size]
@@ -101,26 +102,27 @@ Y_test = y[train_size:]
 w = np.zeros(X_train.shape[1])
 b = 0.0
 
-# Hyperparameters
+# Hyperparametros inicializados
 alpha = 0.001  # Learning rate
 epochs = 12000  # Number of epochs
 
-# Train the model
+# Entrenar el modelo con TODOS los features X de entrenamiento
 w, b = train(X_train, Y_train, w, b, alpha, epochs)
 
-# Evaluate the model on the test set
+# Evaluar el modelo con el Test set
 Y_pred = predict(X_test, w, b)
 
-# Calculate and print the final loss on the test set
+# Calcula y imprime el costo final en el Test Set
 test_loss = avg_loss(X_test, Y_test, w, b)
 print(f"Final Test Loss: {test_loss:.4f}")
 
 #---------------------------------------------------------------------------------------------------
 
-#Seleccionar el valor a utilizar en X para la regresión lineal 
+# Seleccionar el valor a utilizar en X para la regresión lineal SOLO UN feature X de entrenamiento 
 X_train = X_train['X2 house age']
 X_test = X_test['X2 house age']
-#muestra los datos del feature de entrenamiento
+# Muestra los datos de un solo feature de entrenamiento, que en este caso es la edad de la casa :(
+print("Valores de un solo Feature X seleccionado")
 print(X_train)
 
 #Volver a iniciar los datos para los nuevos valores de X -------------------------------------------
@@ -131,38 +133,49 @@ b = 0.0
 alpha = 0.001  # Learning rate(alpha)
 epochs = 12000  # Número de epochs(iteraciones)
 
-# Entrenar al modelo
+# Entrenar al modelo de regresión lineal
 w, b = train(X_train, Y_train, w, b, alpha, epochs)
 # Evaluar el modelo con el Test set
 Y_pred = predict(X_test, w, b)
 
-# Calculate and print the final loss on the test set
+# Calcula y imprime el costo final en el Test Set
 test_loss = avg_loss(X_test, Y_test, w, b)
 print(f"Final Test Loss: {test_loss:.4f}")
 
-# Visualize results for one feature (if you want to plot)
-plt.scatter(X_test[:], Y_test, color='blue')  # Plotting first feature vs. target
+# Visualiza los resultados de la gráfica de regresión lineal de un solo feature
+plt.scatter(X_test[:], Y_test, color='blue')  # Graficando feature(X2 house age) vs. target(Y house price of unit area)
 plt.plot(X_test[:], predict(X_test, w, b), color='red')
-plt.xlabel('First Feature')
-plt.ylabel('Target')
+plt.xlabel('X2 house age')
+plt.ylabel('Y house price of unit area')
 plt.title('Linear Regression on Test Set')
 plt.show()
 
+#Función para mostrar el progreso del modelo de regresión lineal de UN SOLO feature X y el label Y 
 def train_and_plot(X, y, w, b, alpha, epochs):
-  '''Loops over multiple epochs and plot graphs showing progress'''
-  for e in range(epochs):
-    w, b = update_w_and_b(X, y, w, b, alpha)
-  # plot visuals for last epoch
-    if e == epochs-1:
-      avg_loss_ = avg_loss(X, y, w, b)
-      plt.scatter(X[:], y, color='blue')  # Plotting first feature vs. target
-      plt.plot(X[:], np.dot(X, w) + b, color='red')
-      plt.title("Epoch {} | Loss: {} | w:{}, b:{}".format(e, round(avg_loss_,2), round(w, 4), round(b, 4)))
-      plt.show()
-  return w, b
-
+    #Bucle que hace loop sobre multiples epochs(iteraciones) y muestra el progreso de la gráfica
+    for e in range(epochs):
+        w, b = update_w_and_b(X, y, w, b, alpha)
+        # Graficar visualmente la última iteración
+        if e == epochs-1:
+            avg_loss_ = avg_loss(X, y, w, b)
+            plt.scatter(X[:], y, color='blue')  # Plotting first feature vs. target
+            plt.plot(X[:], np.dot(X, w) + b, color='red')
+            plt.xlabel('X2 house age')
+            plt.ylabel('Y house price of unit area')
+            plt.title("Epoch {} | Loss: {} | w:{}, b:{}".format(e, round(avg_loss_,2), round(w, 4), round(b, 4)))
+            plt.show()
+    return w, b
+    
+#Para esta parte fue necesario editar los epochs para que se dividieran por su total y así fueran los datos
+#   pudieran ser captados mejor dentro de la gráfica.
 epoch_plots = [1, int(epochs/50), 2*int(epochs/50), 3*int(epochs/50), 4*int(epochs/50), epochs+1]
 for epoch_plt in epoch_plots:
     w, b = train_and_plot(X_train, Y_train, 0.0, 0.0, alpha, epoch_plt)
 
-#---------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------
+#Comentarios:
+'''
+
+'''
+
+#---------------------------------------------------------------------------------------------------------
